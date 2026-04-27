@@ -1,5 +1,11 @@
+import Page from './components/Page';
+
 function App() {
-  return <div>Subtrackr</div>;
+  return (
+    <>
+      <Page />
+    </>
+  );
 }
 
 export default App;
