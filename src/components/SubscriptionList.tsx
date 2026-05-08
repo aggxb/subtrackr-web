@@ -27,7 +27,7 @@ const SubscriptionList = ({
     return (
       <div className="container w-full">
         <div className="h-100 flex place-content-center place-items-center border-2 border-dotted border-red-600/20 rounded-2xl">
-          <p className="text-red-600/20 font-medium">
+          <p className="text-red-600/20 font-medium text-center">
             Não foi possível encontrar os dados.{' '}
             <span
               className="underline underline-offset-4 cursor-pointer"
@@ -45,7 +45,7 @@ const SubscriptionList = ({
     return (
       <div className="container">
         <div className=" w-full h-100 flex place-content-center place-items-center border-2 border-dotted border-neutral-600 rounded-2xl">
-          <p className="text-neutral-600 font-medium">
+          <p className="text-neutral-600 font-medium text-center">
             Nenhuma assinatura encontrada...
           </p>
         </div>
