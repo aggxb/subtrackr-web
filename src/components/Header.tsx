@@ -1,7 +1,8 @@
 import { Plus, Zap } from 'lucide-react';
-import ButtonField from './ButtonField';
+import ButtonComponent from './ButtonComponent';
+import type { ModalInfo } from '../types/types';
 
-const Header = () => {
+const Header = ({ setIsModalOpen }: Pick<ModalInfo, 'setIsModalOpen'>) => {
   return (
     <header className="flex gap-5 py-8 justify-between items-center container">
       <div className="flex gap-3 items-center">
@@ -12,7 +13,9 @@ const Header = () => {
           SubTrackr<span className="animate-pulse">.</span>
         </h1>
       </div>
-      <ButtonField icon={Plus}>Nova assinatura</ButtonField>
+      <ButtonComponent icon={Plus} handleClick={() => setIsModalOpen(true)}>
+        Nova assinatura
+      </ButtonComponent>
     </header>
   );
 };
