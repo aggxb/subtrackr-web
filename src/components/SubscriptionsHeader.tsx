@@ -1,10 +1,10 @@
 import SelectComponent from './SelectComponent';
 import SubscriptionCounter from './SubscriptionCounter';
-import type { SubscriptionFilters } from '../types/types';
+import type { SubscriptionFilters } from '../types/ui/filters';
 import SearchComponent from './SearchComponent';
 
 const sortOptions = [
-  { id: 1, label: 'Data de criação', value: '' },
+  { id: 1, label: 'Data de criação', value: 'default' },
   { id: 2, label: 'Nome A-Z', value: 'name_asc' },
   { id: 3, label: 'Nome Z-A', value: 'name_desc' },
   { id: 4, label: 'Maior preço', value: 'price_desc' },
@@ -32,6 +32,8 @@ const SubscriptionsHeader = ({
         <div className="flex gap-4 items-center justify-end max-sm:justify-between">
           <SelectComponent
             options={sortOptions}
+            labelKey="label"
+            valueKey="value"
             value={order.value}
             onChange={(value) => {
               const selected = sortOptions.find(

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import StatCard from './StatCard';
 import { CalendarDays, CreditCard, DollarSign } from 'lucide-react';
-import { subscriptionService } from '../services/subscription';
+import { subscriptionService } from '../services/subscription-service';
 import StatCardSkeleton from './StatCardSkeleton';
 import StatCardError from './StatCardError';
 
@@ -18,7 +18,7 @@ const StatSection = () => {
         <StatCardError />
         <StatCardError />
       </section>
-    )
+    );
   }
 
   if (data) {
