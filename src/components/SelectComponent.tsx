@@ -1,26 +1,29 @@
 import React from 'react';
 import { Label, ListBox, Select } from '@heroui/react';
-import type { OptionProps } from '../types/types';
 
-type SelectProps = React.ComponentProps<'select'> & {
-  options: OptionProps[];
+type SelectProps<T> = Omit<React.ComponentProps<'select'>, 'onChange' | 'value'> & {
+  options: T[];
+  labelKey: keyof T;
+  valueKey: keyof T;
   label?: string;
   value?: string | number | null;
   onChange?: (value: string | number) => void;
-};
+}
 
-const SelectComponent = ({
+const SelectComponent = <T,>({
   label,
+  labelKey,
+  valueKey,
   options,
   value,
   onChange,
   className,
-}: SelectProps) => {
+}: SelectProps<T>) => {
   const handleChange = (selectedValue: React.Key | null) => {
     if (selectedValue === null) return;
 
     const selectedOption = options.find(
-      (option) => option.value === selectedValue,
+      (option) => String(option[valueKey]) === selectedValue,
     );
 
     if (selectedOption && onChange) {
@@ -40,12 +43,12 @@ const SelectComponent = ({
         <ListBox>
           {options.map((option) => (
             <ListBox.Item
-              key={option.id}
-              id={option.value}
-              textValue={option.label}
+              key={String(option[valueKey])}
+              id={String(option[valueKey])}
+              textValue={String(option[labelKey])}
               className="hover:bg-neutral-800"
             >
-              {option.label}
+              {String(option[labelKey])}
               <ListBox.ItemIndicator />
             </ListBox.Item>
           ))}

@@ -1,4 +1,4 @@
-import type { ModalInfo } from '../types/types';
+import type { ModalInfo } from '../types/ui/modal';
 import React from 'react';
 import { Modal } from '@heroui/react';
 import ButtonComponent from './ButtonComponent';

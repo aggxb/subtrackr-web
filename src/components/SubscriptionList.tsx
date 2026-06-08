@@ -1,6 +1,8 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { subscriptionService } from '../services/subscription';
-import type { FilterValues, ModalInfo, SubscriptionPut } from '../types/types';
+import { subscriptionService } from '../services/subscription-service';
+import type { SubscriptionPut } from '../types/domain/subscription';
+import type { FilterValues } from '../types/ui/filters';
+import type { ModalInfo } from '../types/ui/modal';
 import SubscriptionComponent from './SubscriptionComponent';
 import { ScrollShadow } from '@heroui/react';
 import SubscriptionSkeleton from './SubscriptionSkeleton';
@@ -65,9 +67,7 @@ const SubscriptionList = ({
               <SubscriptionSkeleton />
             </ul>
           ) : (
-            <motion.ul
-              className="grid gap-4"
-            >
+            <motion.ul className="grid gap-4">
               <AnimatePresence mode="popLayout">
                 {data.map((subscription, index) => (
                   <SubscriptionComponent

@@ -1,6 +1,6 @@
 import { Plus, Zap } from 'lucide-react';
 import ButtonComponent from './ButtonComponent';
-import type { ModalInfo } from '../types/types';
+import type { ModalInfo } from '../types/ui/modal';
 
 const Header = ({ setIsModalOpen }: Pick<ModalInfo, 'setIsModalOpen'>) => {
   return (

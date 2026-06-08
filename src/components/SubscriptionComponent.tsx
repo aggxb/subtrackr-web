@@ -1,10 +1,14 @@
 import { CircleAlert, Pencil, Trash } from 'lucide-react';
 import { normalizeLabelAndValue } from '../utils/normalizeLabelAndValue';
 import { formatCurrency } from '../utils/formatCurrency';
-import type { ModalInfo, Subscription, SubscriptionPut } from '../types/types';
+import type {
+  Subscription,
+  SubscriptionPut,
+} from '../types/domain/subscription';
+import type { ModalInfo } from '../types/ui/modal';
 import { Button, Card, CardHeader, Switch, toast } from '@heroui/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { subscriptionService } from '../services/subscription';
+import { subscriptionService } from '../services/subscription-service';
 import { motion } from 'motion/react';
 
 type SubscriptionProps = Subscription &
@@ -147,7 +151,7 @@ const SubscriptionComponent = ({
                   onPress: () => toast.clear(),
                   variant: 'danger',
                 },
-                indicator: <CircleAlert />
+                indicator: <CircleAlert />,
               });
             }}
           >
