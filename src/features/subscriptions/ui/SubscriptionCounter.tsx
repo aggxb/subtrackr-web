@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import type { SubscriptionFilters } from '../types/ui/filters';
-import { subscriptionService } from '../services/subscription-service';
+import type { SubscriptionFilters } from '../../../types/ui/filters';
+import { subscriptionService } from '../api/subscription-service';
 
 const SubscriptionCounter = ({
   query,

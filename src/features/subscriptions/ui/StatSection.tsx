@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import StatCard from './StatCard';
+import StatCard from '../../../components/StatCard';
 import { CalendarDays, CreditCard, DollarSign } from 'lucide-react';
-import { subscriptionService } from '../services/subscription-service';
-import StatCardSkeleton from './StatCardSkeleton';
-import StatCardError from './StatCardError';
+import { subscriptionService } from '../api/subscription-service';
+import StatCardSkeleton from '../../../components/StatCardSkeleton';
+import StatCardError from '../../../components/StatCardError';
 
 const StatSection = () => {
   const { data, isPending, isError } = useQuery({

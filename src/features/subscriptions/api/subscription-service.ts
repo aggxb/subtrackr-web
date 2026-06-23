@@ -2,14 +2,14 @@ import {
   SubscriptionSchema,
   SubscriptionSchemaArray,
   SummarySchema,
-} from '../schemas/domain/subscription';
+} from '../domain/subscription';
 import {
   type SubscriptionPut,
   type Subscription,
   type SubscriptionPost,
-} from '../types/domain/subscription';
-import { type OptionProps } from '../types/ui/filters';
-import { subtrackrAPI } from './api';
+} from '../domain/subscription';
+import { type OptionProps } from '../../../types/ui/filters';
+import { subtrackrAPI } from '../../../services/api';
 
 export const subscriptionService = {
   getAll: async (query?: string | null, order?: OptionProps) => {

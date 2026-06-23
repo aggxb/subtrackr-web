@@ -1,0 +1,235 @@
+import React, { type JSX } from 'react';
+import { formOptions, useForm } from '@tanstack/react-form';
+import { Form } from '@heroui/react';
+import {
+  SubscriptionSchema,
+  type SubscriptionPost,
+  type SubscriptionPut,
+} from '../domain/subscription';
+import type { ModalInfo } from '../../../types/ui/modal';
+import InputComponent from '../../../components/InputComponent';
+import SelectComponent from '../../../components/SelectComponent';
+import CurrencyInput from '../../../components/CurrencyInput';
+import { useManageSubscription } from '../hooks/useManageSubscription';
+
+type FormFieldConfig = {
+  name: keyof SubscriptionPost;
+  label: string;
+  placeholder?: string;
+  type?: string;
+  prefix?: string;
+  min?: number;
+  max?: number;
+  gridCols: number;
+};
+
+type SubscriptionFormProps = Pick<ModalInfo, 'handleCloseModal'> & {
+  setActiveItem: React.Dispatch<React.SetStateAction<SubscriptionPut | null>>;
+  activeItem: SubscriptionPut | null;
+};
+
+const cycleOptions = [
+  { id: 1, label: 'Mensal', value: 'MONTHLY' },
+  { id: 2, label: 'Anual', value: 'YEARLY' },
+];
+
+const defaultSubscription: SubscriptionPost = {
+  name: '',
+  price: 0.0,
+  cycle: 'MONTHLY',
+  dueDate: 1,
+  status: 'ACTIVE',
+};
+
+const formFields: FormFieldConfig[] = [
+  {
+    name: 'name',
+    label: 'Nome do Serviço',
+    placeholder: 'Ex: Netflix, Spotify...',
+    gridCols: 2,
+  },
+  {
+    name: 'price',
+    label: 'Valor (R$)',
+    placeholder: '0,00',
+    type: 'currency',
+    prefix: 'R$',
+    gridCols: 2,
+  },
+  {
+    name: 'dueDate',
+    label: 'Dia de Vencimento',
+    placeholder: 'Ex: 15',
+    type: 'number',
+    min: 1,
+    max: 31,
+    gridCols: 1,
+  },
+  {
+    name: 'cycle',
+    label: 'Tipo de Ciclo',
+    type: 'select',
+    gridCols: 1,
+  },
+];
+
+const SubscriptionForm = ({
+  handleCloseModal,
+  activeItem,
+}: SubscriptionFormProps) => {
+  const formOpts = formOptions({
+    defaultValues: activeItem ? activeItem : defaultSubscription,
+  });
+
+  const onSuccess = () => {
+    handleCloseModal();
+    form.reset();
+  };
+
+  const { create, update } = useManageSubscription({
+    onSuccessCallback: onSuccess,
+  });
+
+  const form = useForm({
+    ...formOpts,
+    onSubmit: async ({ value }) =>
+      activeItem ? update({ ...value, id: activeItem.id }) : create(value),
+  });
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    form.handleSubmit();
+  };
+
+  const formFieldRecord: Record<string, (f: FormFieldConfig) => JSX.Element> = {
+    select: (f) => (
+      <form.Field
+        key={f.name}
+        name={f.name}
+        validators={{
+          onBlur: SubscriptionSchema.shape[f.name],
+          onChange: SubscriptionSchema.shape[f.name],
+        }}
+        children={(field) => (
+          <div className="grid gap-1">
+            <SelectComponent
+              options={cycleOptions}
+              labelKey="label"
+              valueKey="value"
+              label={f.label}
+              value={field.state.value}
+              onChange={(value) => field.handleChange(value as string)}
+              className="bg-transparent"
+            />
+            <span className="text-red-500 text-xs">
+              {field.state.meta.errors[0]?.message}
+            </span>
+          </div>
+        )}
+      />
+    ),
+    currency: (f) => (
+      <div
+        key={f.name}
+        className={f.gridCols == 1 ? 'col-span-1' : 'col-span-2'}
+      >
+        <form.Field
+          name={f.name}
+          validators={{
+            onBlur: SubscriptionSchema.shape[f.name],
+            onChange: SubscriptionSchema.shape[f.name],
+          }}
+          children={(field) => {
+            const showError =
+              field.state.meta.isTouched && field.state.meta.errors.length > 0;
+
+            return (
+              <div className="grid gap-1">
+                <CurrencyInput
+                  id={f.name}
+                  label={f.label}
+                  type={f.type}
+                  min={f.min}
+                  max={f.max}
+                  prefix={f?.prefix}
+                  placeholder={f.placeholder}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  onChange={(value) => field.handleChange(value ?? 0)}
+                  isInvalid={showError}
+                  aria-label={f.label}
+                />
+                {showError && (
+                  <span className="text-red-500 text-xs">
+                    {field.state.meta.errors[0]?.message}
+                  </span>
+                )}
+              </div>
+            );
+          }}
+        />
+      </div>
+    ),
+    text: (f) => (
+      <div
+        key={f.name}
+        className={f.gridCols == 1 ? 'col-span-1' : 'col-span-2'}
+      >
+        <form.Field
+          name={f.name}
+          validators={{
+            onBlur: SubscriptionSchema.shape[f.name],
+            onChange: SubscriptionSchema.shape[f.name],
+          }}
+          children={(field) => {
+            const showError =
+              field.state.meta.isTouched && field.state.meta.errors.length > 0;
+            return (
+              <div className="grid gap-1">
+                <InputComponent
+                  id={f.name}
+                  label={f.label}
+                  type={f.type || 'text'}
+                  min={f.min}
+                  max={f.max}
+                  prefix={f?.prefix}
+                  placeholder={f.placeholder}
+                  value={field.state.value}
+                  onBlur={field.handleBlur}
+                  isInvalid={showError}
+                  onChange={({ target }) => {
+                    const value = target.value;
+
+                    if (f.type !== 'number') field.handleChange(value);
+                    if (f.type === 'number' && !value) field.handleChange(0);
+                    if (f.type === 'number' && value)
+                      field.handleChange(Number(value));
+                  }}
+                  aria-label={f.label}
+                />
+                {showError && (
+                  <span className="text-red-500 text-xs">
+                    {field.state.meta.errors[0]?.message}
+                  </span>
+                )}
+              </div>
+            );
+          }}
+        />
+      </div>
+    ),
+  };
+
+  return (
+    <Form id="subscription-form" onSubmit={handleSubmit} className="grid gap-3">
+      {formFields.map((f) => {
+        const buildField =
+          formFieldRecord[f.type as string] || formFieldRecord['text'];
+
+        return buildField(f);
+      })}
+    </Form>
+  );
+};
+
+export default SubscriptionForm;
