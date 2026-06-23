@@ -7,6 +7,7 @@ import SubscriptionComponent from './SubscriptionComponent';
 import { ScrollShadow } from '@heroui/react';
 import SubscriptionSkeleton from './SubscriptionSkeleton';
 import { motion, AnimatePresence } from 'motion/react';
+import React from 'react';
 
 type SubscriptionListProps = FilterValues &
   Pick<ModalInfo, 'setIsModalOpen'> & {

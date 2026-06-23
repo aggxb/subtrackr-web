@@ -4,9 +4,12 @@ import StatSection from '../features/subscriptions/ui/StatSection';
 import SubscriptionList from '../features/subscriptions/ui/SubscriptionList';
 import SubscriptionsHeader from '../features/subscriptions/ui/SubscriptionsHeader';
 import ModalComponent from './ModalComponent';
-import SubscriptionForm from '../features/subscriptions/ui/SubscriptionForm';
 import type { SubscriptionPut } from '../features/subscriptions/domain/subscription';
 import useDebounce from '../hooks/useDebounce';
+
+const SubscriptionForm = React.lazy(
+  () => import('../features/subscriptions/ui/SubscriptionForm'),
+);
 
 const options = [
   { id: 1, label: 'Data de criação', value: '' },
@@ -27,10 +30,10 @@ const Page = () => {
 
   const debouncedQuery = useDebounce(query, 500);
 
-  const handleCloseModal = () => {
+  const handleCloseModal = React.useCallback(() => {
     setActiveItem(null);
     setIsModalOpen(false);
-  };
+  }, []);
 
   return (
     <>
@@ -62,12 +65,22 @@ const Page = () => {
         buttonLabel={activeItem ? 'Salvar' : 'Adicionar'}
         isMutatingLabel={activeItem ? 'Salvando...' : 'Adicionando...'}
       >
-        <SubscriptionForm
-          key={activeItem ? activeItem.id : 'new'}
-          setActiveItem={setActiveItem}
-          activeItem={activeItem}
-          handleCloseModal={handleCloseModal}
-        />
+        {isModalOpen && (
+          <React.Suspense
+            fallback={
+              <div className="py-10 text-center text-sm text-neutral-500">
+                Carregando formulário...
+              </div>
+            }
+          >
+            <SubscriptionForm
+              key={activeItem ? activeItem.id : 'new'}
+              setActiveItem={setActiveItem}
+              activeItem={activeItem}
+              handleCloseModal={handleCloseModal}
+            />
+          </React.Suspense>
+        )}
       </ModalComponent>
     </>
   );

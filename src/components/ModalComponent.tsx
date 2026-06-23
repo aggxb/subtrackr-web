@@ -21,7 +21,7 @@ const ModalComponent = ({
       isOpen={isModalOpen}
       onOpenChange={handleCloseModal}
     >
-      <Modal.Container className='max-sm:grid max-sm:place-content-center'>
+      <Modal.Container className="max-sm:grid max-sm:place-content-center">
         <Modal.Dialog className="bg-black border border-neutral-800 w-full">
           <Modal.Header>
             <Modal.Heading className="text-xl font-semibold px-0.5">
@@ -57,4 +57,4 @@ const ModalComponent = ({
   );
 };
 
-export default ModalComponent;
+export default React.memo(ModalComponent);

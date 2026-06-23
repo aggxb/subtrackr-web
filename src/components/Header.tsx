@@ -1,6 +1,7 @@
 import { Plus, Zap } from 'lucide-react';
 import ButtonComponent from './ButtonComponent';
 import type { ModalInfo } from '../types/ui/modal';
+import React from 'react';
 
 const Header = ({ setIsModalOpen }: Pick<ModalInfo, 'setIsModalOpen'>) => {
   return (
@@ -20,4 +21,4 @@ const Header = ({ setIsModalOpen }: Pick<ModalInfo, 'setIsModalOpen'>) => {
   );
 };
 
-export default Header;
+export default React.memo(Header);
