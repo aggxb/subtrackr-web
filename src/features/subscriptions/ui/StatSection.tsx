@@ -4,6 +4,7 @@ import { CalendarDays, CreditCard, DollarSign } from 'lucide-react';
 import { subscriptionService } from '../api/subscription-service';
 import StatCardSkeleton from '../../../components/StatCardSkeleton';
 import StatCardError from '../../../components/StatCardError';
+import React from 'react';
 
 const StatSection = () => {
   const { data, isPending, isError } = useQuery({
@@ -56,4 +57,4 @@ const StatSection = () => {
   }
 };
 
-export default StatSection;
+export default React.memo(StatSection);
