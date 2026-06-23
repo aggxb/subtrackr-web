@@ -1,7 +1,7 @@
-import SelectComponent from './SelectComponent';
-import SubscriptionCounter from './SubscriptionCounter';
-import type { SubscriptionFilters } from '../types/ui/filters';
-import SearchComponent from './SearchComponent';
+import SelectComponent from '../../../components/SelectComponent';
+import SubscriptionCounter from '../ui/SubscriptionCounter';
+import type { SubscriptionFilters } from '../../../types/ui/filters';
+import SearchComponent from '../../../components/SearchComponent';
 
 const sortOptions = [
   { id: 1, label: 'Data de criação', value: 'default' },

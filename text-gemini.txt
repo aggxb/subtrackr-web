@@ -1,403 +1,235 @@
-// SelectComponent.tsx
-import React from 'react';
-import { Label, ListBox, Select } from '@heroui/react';
-
-type SelectProps<T> = Omit<React.ComponentProps<'select'>, 'onChange' | 'value'> & {
-  options: T[];
-  labelKey: keyof T;
-  valueKey: keyof T;
-  label?: string;
-  value?: string | number | null;
-  onChange?: (value: string | number) => void;
-}
-
-const SelectComponent = <T,>({
-  label,
-  labelKey,
-  valueKey,
-  options,
-  value,
-  onChange,
-  className,
-}: SelectProps<T>) => {
-  const handleChange = (selectedValue: React.Key | null) => {
-    if (selectedValue === null) return;
-
-    const selectedOption = options.find(
-      (option) => String(option[valueKey]) === selectedValue,
-    );
-
-    if (selectedOption && onChange) {
-      onChange(selectedValue as string);
-    }
-  };
-  return (
-    <Select aria-label={label || 'Opções de seleção'} value={value} onChange={handleChange} className="min-w-40">
-      {label && <Label className="font-medium text-neutral-500">{label}</Label>}
-      <Select.Trigger
-        className={`bg-neutral-900 border border-neutral-800  *:text-neutral-500 ${className}`}
-      >
-        <Select.Value />
-        <Select.Indicator />
-      </Select.Trigger>
-      <Select.Popover className="bg-neutral-900">
-        <ListBox>
-          {options.map((option) => (
-            <ListBox.Item
-              key={String(option[valueKey])}
-              id={String(option[valueKey])}
-              textValue={String(option[labelKey])}
-              className="hover:bg-neutral-800"
-            >
-              {String(option[labelKey])}
-              <ListBox.ItemIndicator />
-            </ListBox.Item>
-          ))}
-        </ListBox>
-      </Select.Popover>
-    </Select>
-  );
-};
-
-export default SelectComponent;
-
-// SubscriptionForm.tsx
-import React from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { type JSX } from 'react';
 import { formOptions, useForm } from '@tanstack/react-form';
-import { z } from 'zod';
-import { Form, toast } from '@heroui/react';
-import type { ModalInfo, SubscriptionPut } from '../types/types';
-import InputComponent from './InputComponent';
-import SelectComponent from './SelectComponent';
-import CurrencyInput from './CurrencyInput';
-import { subscriptionService } from '../services/subscription-service';
-import { CircleCheck } from 'lucide-react';
-
-const subscriptionSchema = z.object({
-  name: z.string().min(3, 'O nome deve ter, pelo menos, 3 caracteres'),
-  price: z.number().positive('O valor deve ser maior que zero'),
-  cycle: z.enum(['MONTHLY', 'YEARLY']),
-  dueDate: z
-    .number()
-    .min(1, 'O dia de vencimento deve estar entre 1 e 31')
-    .max(31, 'O dia de vencimento deve estar entre 1 e 31'),
-  status: z.enum(['ACTIVE', 'CANCELED']),
-});
-
-type SubscriptionPost = z.infer<typeof subscriptionSchema>;
+import { Form } from '@heroui/react';
+import {
+	SubscriptionSchema,
+	type SubscriptionPost,
+	type SubscriptionPut,
+} from '../domain/subscription';
+import type { ModalInfo } from '../../../types/ui/modal';
+import InputComponent from '../../../components/InputComponent';
+import SelectComponent from '../../../components/SelectComponent';
+import CurrencyInput from '../../../components/CurrencyInput';
+import { useManageSubscription } from '../hooks/useManageSubscription';
 
 type FormFieldConfig = {
-  name: keyof SubscriptionPost;
-  label: string;
-  placeholder?: string;
-  type?: string;
-  prefix?: string;
-  min?: number;
-  max?: number;
-  gridCols: number;
+	name: keyof SubscriptionPost;
+	label: string;
+	placeholder?: string;
+	type?: string;
+	prefix?: string;
+	min?: number;
+	max?: number;
+	gridCols: number;
 };
 
 type SubscriptionFormProps = Pick<ModalInfo, 'handleCloseModal'> & {
-  setActiveItem: React.Dispatch<React.SetStateAction<SubscriptionPut | null>>;
-  activeItem: SubscriptionPut | null;
+	setActiveItem: React.Dispatch<React.SetStateAction<SubscriptionPut | null>>;
+	activeItem: SubscriptionPut | null;
 };
 
 const cycleOptions = [
-  { id: 1, label: 'Mensal', value: 'MONTHLY' },
-  { id: 2, label: 'Anual', value: 'YEARLY' },
+	{ id: 1, label: 'Mensal', value: 'MONTHLY' },
+	{ id: 2, label: 'Anual', value: 'YEARLY' },
 ];
 
 const defaultSubscription: SubscriptionPost = {
-  name: '',
-  price: 0.0,
-  cycle: 'MONTHLY',
-  dueDate: 1,
-  status: 'ACTIVE',
+	name: '',
+	price: 0.0,
+	cycle: 'MONTHLY',
+	dueDate: 1,
+	status: 'ACTIVE',
 };
 
 const formFields: FormFieldConfig[] = [
-  {
-    name: 'name',
-    label: 'Nome do Serviço',
-    placeholder: 'Ex: Netflix, Spotify...',
-    gridCols: 2,
-  },
-  {
-    name: 'price',
-    label: 'Valor (R$)',
-    placeholder: '0,00',
-    type: 'currency',
-    prefix: 'R$',
-    gridCols: 2,
-  },
-  {
-    name: 'dueDate',
-    label: 'Dia de Vencimento',
-    placeholder: 'Ex: 15',
-    type: 'number',
-    min: 1,
-    max: 31,
-    gridCols: 1,
-  },
-  {
-    name: 'cycle',
-    label: 'Tipo de Ciclo',
-    type: 'select',
-    gridCols: 1,
-  },
+	{
+		name: 'name',
+		label: 'Nome do Serviço',
+		placeholder: 'Ex: Netflix, Spotify...',
+		gridCols: 2,
+	},
+	{
+		name: 'price',
+		label: 'Valor (R$)',
+		placeholder: '0,00',
+		type: 'currency',
+		prefix: 'R$',
+		gridCols: 2,
+	},
+	{
+		name: 'dueDate',
+		label: 'Dia de Vencimento',
+		placeholder: 'Ex: 15',
+		type: 'number',
+		min: 1,
+		max: 31,
+		gridCols: 1,
+	},
+	{
+		name: 'cycle',
+		label: 'Tipo de Ciclo',
+		type: 'select',
+		gridCols: 1,
+	},
 ];
 
 const SubscriptionForm = ({
-  handleCloseModal,
-  activeItem,
+	handleCloseModal,
+	activeItem,
 }: SubscriptionFormProps) => {
-  const formOpts = formOptions({
-    defaultValues: activeItem ? activeItem : defaultSubscription,
-  });
+	const formOpts = formOptions({
+		defaultValues: activeItem ? activeItem : defaultSubscription,
+	});
 
-  const queryClient = useQueryClient();
-  const postMutation = useMutation({
-    mutationFn: subscriptionService.postSubscription,
-    mutationKey: ['subscriptions'],
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['subscriptions'],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['summary'],
-      });
-      handleCloseModal();
-      form.reset();
-      toast.success('Assinatura criada com sucesso', {
-        actionProps: {
-          onPress: () => toast.clear(),
-        },
-        indicator: <CircleCheck />, 
-      });
-    },
-  });
+	const onSuccess = () => {
+		handleCloseModal();
+		form.reset();
+	};
 
-  const putMutation = useMutation({
-    mutationFn: subscriptionService.putSubscription,
-    mutationKey: ['subscriptions'],
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['subscriptions'],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ['summary'],
-      });
-      handleCloseModal();
-      form.reset();
-      toast.success('Assinatura atualizada com sucesso', {
-        actionProps: {
-          onPress: () => toast.clear(),
-        },
-        indicator: <CircleCheck />, 
-      });
-    },
-  });
+	const { create, update } = useManageSubscription({
+		onSuccessCallback: onSuccess,
+	});
 
-  const form = useForm({
-    ...formOpts,
-    onSubmit: async ({ value }) =>
-      activeItem
-        ? putMutation.mutate({ ...value, id: activeItem.id })
-        : postMutation.mutate(value),
-  });
+	const form = useForm({
+		...formOpts,
+		onSubmit: async ({ value }) =>
+			activeItem ? update({ ...value, id: activeItem.id }) : create(value),
+	});
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    form.handleSubmit();
-  };
+	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		form.handleSubmit();
+	};
 
-  return (
-    <Form id="subscription-form" onSubmit={handleSubmit} className="grid gap-3">
-      {formFields.map((f) => {
-        if (f.type === 'select') {
-          return (
-            <form.Field
-              key={f.name}
-              name={f.name}
-              validators={{
-                onBlur: subscriptionSchema.shape[f.name],
-                onChange: subscriptionSchema.shape[f.name],
-              }}
-              children={(field) => (
-                <div className="grid gap-1">
-                  <SelectComponent
-                    options={cycleOptions}
-                    labelKey="label"
-                    valueKey="value"
-                    label={f.label}
-                    value={field.state.value}
-                    onChange={(value) => field.handleChange(value as string)}
-                    className="bg-transparent"
-                  />
-                  <span className="text-red-500 text-xs">
-                    {field.state.meta.errors[0]?.message}
-                  </span>
-                </div>
-              )}
-            />
-          );
-        }
+	const formFieldRecord: Record<string, (f: FormFieldConfig) => JSX.Element> = {
+		select: (f) => (
+			<form.Field
+				key={f.name}
+				name={f.name}
+				validators={{
+					onBlur: SubscriptionSchema.shape[f.name],
+					onChange: SubscriptionSchema.shape[f.name],
+				}}
+				children={(field) => (
+					<div className="grid gap-1">
+						<SelectComponent
+							options={cycleOptions}
+							labelKey="label"
+							valueKey="value"
+							label={f.label}
+							value={field.state.value}
+							onChange={(value) => field.handleChange(value as string)}
+							className="bg-transparent"
+						/>
+						<span className="text-red-500 text-xs">
+							{field.state.meta.errors[0]?.message}
+						</span>
+					</div>
+				)}
+			/>
+		),
+		currency: (f) => (
+			<div
+				key={f.name}
+				className={f.gridCols == 1 ? 'col-span-1' : 'col-span-2'}
+			>
+				<form.Field
+					name={f.name}
+					validators={{
+						onBlur: SubscriptionSchema.shape[f.name],
+						onChange: SubscriptionSchema.shape[f.name],
+					}}
+					children={(field) => {
+						const showError =
+							field.state.meta.isTouched && field.state.meta.errors.length > 0;
 
-        if (f.type === 'currency') {
-          return (
-            <div
-              key={f.name}
-              className={f.gridCols == 1 ? 'col-span-1' : 'col-span-2'}
-            >
-              <form.Field
-                name={f.name}
-                validators={{
-                  onBlur: subscriptionSchema.shape[f.name],
-                  onChange: subscriptionSchema.shape[f.name],
-                }}
-                children={(field) => {
-                  const showError =
-                    field.state.meta.isTouched &&
-                    field.state.meta.errors.length > 0;
+						return (
+							<div className="grid gap-1">
+								<CurrencyInput
+									id={f.name}
+									label={f.label}
+									type={f.type}
+									min={f.min}
+									max={f.max}
+									prefix={f?.prefix}
+									placeholder={f.placeholder}
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(value) => field.handleChange(value ?? 0)}
+									isInvalid={showError}
+									aria-label={f.label}
+								/>
+								{showError && (
+									<span className="text-red-500 text-xs">
+										{field.state.meta.errors[0]?.message}
+									</span>
+								)}
+							</div>
+						);
+					}}
+				/>
+			</div>
+		),
+		text: (f) => (
+			<div
+				key={f.name}
+				className={f.gridCols == 1 ? 'col-span-1' : 'col-span-2'}
+			>
+				<form.Field
+					name={f.name}
+					validators={{
+						onBlur: SubscriptionSchema.shape[f.name],
+						onChange: SubscriptionSchema.shape[f.name],
+					}}
+					children={(field) => {
+						const showError =
+							field.state.meta.isTouched && field.state.meta.errors.length > 0;
+						return (
+							<div className="grid gap-1">
+								<InputComponent
+									id={f.name}
+									label={f.label}
+									type={f.type || 'text'}
+									min={f.min}
+									max={f.max}
+									prefix={f?.prefix}
+									placeholder={f.placeholder}
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									isInvalid={showError}
+									onChange={({ target }) => {
+										const value = target.value;
 
-                  return (
-                    <div className="grid gap-1">
-                      <CurrencyInput
-                        id={f.name}
-                        label={f.label}
-                        type={f.type}
-                        min={f.min}
-                        max={f.max}
-                        prefix={f?.prefix}
-                        placeholder={f.placeholder}
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(value) => field.handleChange(value ?? 0)}
-                        isInvalid={showError}
-                        aria-label={f.label}
-                      />
-                      {showError && (
-                        <span className="text-red-500 text-xs">
-                          {field.state.meta.errors[0]?.message}
-                        </span>
-                      )}
-                    </div>
-                  );
-                }}
-              />
-            </div>
-          );
-        }
+										if (f.type !== 'number') field.handleChange(value);
+										if (f.type === 'number' && !value) field.handleChange(0);
+										if (f.type === 'number' && value)
+											field.handleChange(Number(value));
+									}}
+									aria-label={f.label}
+								/>
+								{showError && (
+									<span className="text-red-500 text-xs">
+										{field.state.meta.errors[0]?.message}
+									</span>
+								)}
+							</div>
+						);
+					}}
+				/>
+			</div>
+		),
+	};
 
-        return (
-          <div
-            key={f.name}
-            className={f.gridCols == 1 ? 'col-span-1' : 'col-span-2'}
-          >
-            <form.Field
-              name={f.name}
-              validators={{
-                onBlur: subscriptionSchema.shape[f.name],
-                onChange: subscriptionSchema.shape[f.name],
-              }}
-              children={(field) => {
-                const showError =
-                  field.state.meta.isTouched &&
-                  field.state.meta.errors.length > 0;
-                return (
-                  <div className="grid gap-1">
-                    <InputComponent
-                      id={f.name}
-                      label={f.label}
-                      type={f.type || 'text'}
-                      min={f.min}
-                      max={f.max}
-                      prefix={f?.prefix}
-                      placeholder={f.placeholder}
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      isInvalid={showError}
-                      onChange={({ target }) => {
-                        const value = target.value;
+	return (
+		<Form id="subscription-form" onSubmit={handleSubmit} className="grid gap-3">
+			{formFields.map((f) => {
+				const buildField = formFieldRecord[f.type || 'text'];
 
-                        if (f.type !== 'number') field.handleChange(value);
-                        if (f.type === 'number' && !value)
-                          field.handleChange(0);
-                        if (f.type === 'number' && value)
-                          field.handleChange(Number(value));
-                      }}
-                      aria-label={f.label}
-                    />
-                    {showError && (
-                      <span className="text-red-500 text-xs">
-                        {field.state.meta.errors[0]?.message}
-                      </span>
-                    )}
-                  </div>
-                );
-              }}
-            />
-          </div>
-        );
-      })}
-    </Form>
-  );
+				return buildField(f);
+			})}
+		</Form>
+	);
 };
 
 export default SubscriptionForm;
 
-// SubscriptionsHeader.tsx
-import SelectComponent from './SelectComponent';
-import SubscriptionCounter from './SubscriptionCounter';
-import type { SubscriptionFilters } from '../types/types';
-import SearchComponent from './SearchComponent';
-
-const sortOptions = [
-  { id: 1, label: 'Data de criação', value: '' },
-  { id: 2, label: 'Nome A-Z', value: 'name_asc' },
-  { id: 3, label: 'Nome Z-A', value: 'name_desc' },
-  { id: 4, label: 'Maior preço', value: 'price_desc' },
-  { id: 5, label: 'Menor preço', value: 'price_asc' },
-];
-
-const SubscriptionsHeader = ({
-  query,
-  setQuery,
-  order,
-  setOrder,
-  debouncedQuery,
-}: SubscriptionFilters) => {
-  return (
-    <div className="container flex items-center gap-5 py-8 md:justify-between max-md:grid">
-      <h2 className="text-lg font-medium">Suas assinaturas</h2>
-      <div className="grid grid-cols-2 justify-between items-center gap-4 max-sm:grid-cols-1">
-        <SearchComponent
-          name="search"
-          placeholder="Buscar assinatura..."
-          aria-label="Buscar assinatura"
-          value={query || ''}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-        <div className="flex gap-4 items-center justify-end max-sm:justify-between">
-          <SelectComponent
-            options={sortOptions}
-            labelKey="label"
-            valueKey="value"
-            value={order.value}
-            onChange={(value) => {
-              const selected = sortOptions.find(
-                (option) => option.value === value,
-              );
-
-              if (selected) setOrder(selected);
-            }}
-          />
-          <SubscriptionCounter order={order} query={debouncedQuery} />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default SubscriptionsHeader;

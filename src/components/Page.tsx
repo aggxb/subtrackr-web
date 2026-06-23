@@ -1,10 +1,10 @@
 import React from 'react';
 import Header from './Header';
-import StatSection from './StatSection';
-import SubscriptionList from './SubscriptionList';
-import SubscriptionsHeader from './SubscriptionsHeader';
+import StatSection from '../features/subscriptions/ui/StatSection';
+import SubscriptionList from '../features/subscriptions/ui/SubscriptionList';
+import SubscriptionsHeader from '../features/subscriptions/ui/SubscriptionsHeader';
 import ModalComponent from './ModalComponent';
-import SubscriptionForm from './SubscriptionForm';
+import SubscriptionForm from '../features/subscriptions/ui/SubscriptionForm';
 import type { SubscriptionPut } from '../types/domain/subscription';
 import useDebounce from '../hooks/useDebounce';
 
