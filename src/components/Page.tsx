@@ -5,7 +5,7 @@ import SubscriptionList from '../features/subscriptions/ui/SubscriptionList';
 import SubscriptionsHeader from '../features/subscriptions/ui/SubscriptionsHeader';
 import ModalComponent from './ModalComponent';
 import SubscriptionForm from '../features/subscriptions/ui/SubscriptionForm';
-import type { SubscriptionPut } from '../types/domain/subscription';
+import type { SubscriptionPut } from '../features/subscriptions/domain/subscription';
 import useDebounce from '../hooks/useDebounce';
 
 const options = [
