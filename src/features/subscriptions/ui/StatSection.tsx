@@ -5,11 +5,12 @@ import { subscriptionService } from '../api/subscription-service';
 import StatCardSkeleton from '../../../components/StatCardSkeleton';
 import StatCardError from '../../../components/StatCardError';
 import React from 'react';
+import type { QueryParams } from '../../../types/ui/filters';
 
-const StatSection = () => {
+const StatSection = ({ ownershipType }: Pick<QueryParams, 'ownershipType'>) => {
   const { data, isPending, isError } = useQuery({
-    queryKey: ['summary'],
-    queryFn: subscriptionService.getSummary,
+    queryKey: ['summary', ownershipType],
+    queryFn: () => subscriptionService.getSummary(ownershipType),
   });
 
   if (isError) {

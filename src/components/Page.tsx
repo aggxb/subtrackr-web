@@ -6,51 +6,66 @@ import SubscriptionsHeader from '../features/subscriptions/ui/SubscriptionsHeade
 import ModalComponent from './ModalComponent';
 import type { SubscriptionPut } from '../features/subscriptions/domain/subscription';
 import useDebounce from '../hooks/useDebounce';
+import { ownershipTypeOptions, sortOptions } from '../types/ui/options';
 
 const SubscriptionForm = React.lazy(
   () => import('../features/subscriptions/ui/SubscriptionForm'),
 );
 
-const options = [
-  { id: 1, label: 'Data de criação', value: '' },
-  { id: 2, label: 'Nome A-Z', value: 'name_asc' },
-  { id: 3, label: 'Nome Z-A', value: 'name_desc' },
-  { id: 4, label: 'Maior preço', value: 'price_desc' },
-  { id: 5, label: 'Menor preço', value: 'price_asc' },
-];
-
 const Page = () => {
-  const [query, setQuery] = React.useState('');
-  const [order, setOrder] = React.useState(options[0]);
+  const [term, setTerm] = React.useState('');
+  const [sort, setSort] = React.useState(sortOptions[0]);
+  const [ownershipType, setOwnershipType] = React.useState(
+    ownershipTypeOptions[0],
+  );
+  const [page, setPage] = React.useState(0);
+  const [size, setSize] = React.useState(5);
 
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [activeItem, setActiveItem] = React.useState<SubscriptionPut | null>(
     null,
   );
 
-  const debouncedQuery = useDebounce(query, 500);
+  const debouncedQuery = useDebounce(term, 500);
 
   const handleCloseModal = React.useCallback(() => {
     setActiveItem(null);
     setIsModalOpen(false);
   }, []);
 
+  // React.useEffect(() => {
+  //   setPage(0);
+  // }, [debouncedQuery, sort, ownershipType]);
+
   return (
     <>
       <Header setIsModalOpen={setIsModalOpen} />
-      <StatSection />
+      <StatSection
+        ownershipType={ownershipType}
+      />
       <SubscriptionsHeader
-        query={query}
-        setQuery={setQuery}
-        order={order}
-        setOrder={setOrder}
+        term={term}
+        setTerm={setTerm}
+        sort={sort}
+        setSort={setSort}
+        ownershipType={ownershipType}
+        setOwnershipType={setOwnershipType}
+        page={page}
+        setPage={setPage}
+        size={size}
+        setSize={setSize}
         debouncedQuery={debouncedQuery}
       />
       <SubscriptionList
         setIsModalOpen={setIsModalOpen}
         setActiveItem={setActiveItem}
-        query={debouncedQuery}
-        order={order}
+        term={debouncedQuery}
+        sort={sort}
+        page={page}
+        size={size}
+        setPage={setPage}
+        setSize={setSize}
+        ownershipType={ownershipType}
       />
       <ModalComponent
         formId="subscription-form"

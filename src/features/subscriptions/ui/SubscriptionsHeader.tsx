@@ -2,20 +2,18 @@ import SelectComponent from '../../../components/SelectComponent';
 import SubscriptionCounter from '../ui/SubscriptionCounter';
 import type { SubscriptionFilters } from '../../../types/ui/filters';
 import SearchComponent from '../../../components/SearchComponent';
-
-const sortOptions = [
-  { id: 1, label: 'Data de criação', value: 'default' },
-  { id: 2, label: 'Nome A-Z', value: 'name_asc' },
-  { id: 3, label: 'Nome Z-A', value: 'name_desc' },
-  { id: 4, label: 'Maior preço', value: 'price_desc' },
-  { id: 5, label: 'Menor preço', value: 'price_asc' },
-];
+import { ownershipTypeOptions, sortOptions } from '../../../types/ui/options';
 
 const SubscriptionsHeader = ({
-  query,
-  setQuery,
-  order,
-  setOrder,
+  term,
+  sort,
+  page,
+  size,
+  ownershipType,
+  setPage,
+  setTerm,
+  setSort,
+  setOwnershipType,
   debouncedQuery,
 }: SubscriptionFilters) => {
   return (
@@ -26,24 +24,51 @@ const SubscriptionsHeader = ({
           name="search"
           placeholder="Buscar assinatura..."
           aria-label="Buscar assinatura"
-          value={query || ''}
-          onChange={(event) => setQuery(event.target.value)}
+          value={term || ''}
+          onChange={(event) => {
+            setTerm(event.target.value);
+
+            setPage(0);
+          }}
         />
         <div className="flex gap-4 items-center justify-end max-sm:justify-between">
+          <SelectComponent
+            options={ownershipTypeOptions}
+            labelKey="label"
+            valueKey="value"
+            value={ownershipType?.value}
+            onChange={(value) => {
+              const selected = ownershipTypeOptions.find(
+                (option) => option.value === value,
+              );
+
+              if (selected) setOwnershipType(selected);
+
+              setPage(0);
+            }}
+          />
           <SelectComponent
             options={sortOptions}
             labelKey="label"
             valueKey="value"
-            value={order.value}
+            value={sort?.value}
             onChange={(value) => {
               const selected = sortOptions.find(
                 (option) => option.value === value,
               );
 
-              if (selected) setOrder(selected);
+              if (selected) setSort(selected);
+
+              setPage(0);
             }}
           />
-          <SubscriptionCounter order={order} query={debouncedQuery} />
+          <SubscriptionCounter
+            sort={sort}
+            term={debouncedQuery}
+            page={page}
+            size={size}
+            ownershipType={ownershipType}
+          />
         </div>
       </div>
     </div>

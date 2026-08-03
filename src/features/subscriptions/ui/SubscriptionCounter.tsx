@@ -3,13 +3,20 @@ import type { SubscriptionFilters } from '../../../types/ui/filters';
 import { subscriptionService } from '../api/subscription-service';
 
 const SubscriptionCounter = ({
-  query,
-  order,
-}: Pick<SubscriptionFilters, 'query' | 'order'>) => {
+  term,
+  sort,
+  page,
+  size,
+  ownershipType,
+}: Pick<
+  SubscriptionFilters,
+  'term' | 'sort' | 'page' | 'size' | 'ownershipType'
+>) => {
   const { data } = useQuery({
-    queryKey: ['subscriptions', query, order],
-    queryFn: () => subscriptionService.getAll(query, order),
-    select: (data) => data.length,
+    queryKey: ['subscriptions', term, sort, page, size, ownershipType?.value],
+    queryFn: () =>
+      subscriptionService.getAll(term, sort?.value, page, size, ownershipType),
+    select: (data) => data.content.length,
   });
 
   const count = data ?? 0;
