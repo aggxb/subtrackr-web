@@ -1,28 +1,33 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { subscriptionService } from '../api/subscription-service';
 import type { SubscriptionPut } from '../domain/subscription';
-import type { FilterValues } from '../../../types/ui/filters';
+import type { QueryParams } from '../../../types/ui/filters';
 import type { ModalInfo } from '../../../types/ui/modal';
 import SubscriptionComponent from './SubscriptionComponent';
-import { ScrollShadow } from '@heroui/react';
+import { Pagination, ScrollShadow } from '@heroui/react';
 import SubscriptionSkeleton from './SubscriptionSkeleton';
 import { motion, AnimatePresence } from 'motion/react';
 import React from 'react';
 
-type SubscriptionListProps = FilterValues &
+type SubscriptionListProps = QueryParams &
   Pick<ModalInfo, 'setIsModalOpen'> & {
     setActiveItem: React.Dispatch<React.SetStateAction<SubscriptionPut | null>>;
   };
 
 const SubscriptionList = ({
-  query,
-  order,
+  term,
+  sort,
+  setPage,
+  page,
+  size,
+  ownershipType,
   setIsModalOpen,
   setActiveItem,
 }: SubscriptionListProps) => {
   const { isPending, isError, data } = useQuery({
-    queryKey: ['subscriptions', query, order],
-    queryFn: () => subscriptionService.getAll(query, order),
+    queryKey: ['subscriptions', term, sort, ownershipType, page, size],
+    queryFn: () =>
+      subscriptionService.getAll(term, sort?.value, page, size, ownershipType),
     placeholderData: keepPreviousData,
   });
 
@@ -44,7 +49,7 @@ const SubscriptionList = ({
     );
   }
 
-  if (data?.length === 0) {
+  if (data?.content.length === 0) {
     return (
       <div className="container">
         <div className=" w-full h-100 flex place-content-center place-items-center border-2 border-dotted border-neutral-600 rounded-2xl">
@@ -56,10 +61,10 @@ const SubscriptionList = ({
     );
   }
 
-  if (data && data.length) {
+  if (data && data.content.length) {
     return (
       <div>
-        <ScrollShadow className="container max-h-157.5 pb-8 overflow-y-auto overflow-x-hidden scroll">
+        <ScrollShadow className="container pb-8 ">
           {isPending ? (
             <ul className="grid gap-4">
               <SubscriptionSkeleton />
@@ -70,7 +75,7 @@ const SubscriptionList = ({
           ) : (
             <motion.ul className="grid gap-4">
               <AnimatePresence mode="popLayout">
-                {data.map((subscription, index) => (
+                {data.content.map((subscription, index) => (
                   <SubscriptionComponent
                     key={subscription.id}
                     setIsModalOpen={setIsModalOpen}
@@ -79,6 +84,41 @@ const SubscriptionList = ({
                     {...subscription}
                   />
                 ))}
+                <Pagination className="justify-end">
+                  <Pagination.Content>
+                    <Pagination.Item className="grid gap-4">
+                      <Pagination.Previous
+                        isDisabled={page === 0}
+                        onPress={() => setPage((p) => p - 1)}
+                      >
+                        <Pagination.PreviousIcon />
+                        <span>Ant.</span>
+                      </Pagination.Previous>
+                    </Pagination.Item>
+                    {Array.from(
+                      { length: data.totalPages },
+                      (_, i) => i + 1,
+                    ).map((p) => (
+                      <Pagination.Item key={p}>
+                        <Pagination.Link
+                          isActive={p - 1 === page}
+                          onPress={() => setPage(p - 1)}
+                        >
+                          {p}
+                        </Pagination.Link>
+                      </Pagination.Item>
+                    ))}
+                    <Pagination.Item>
+                      <Pagination.Next
+                        isDisabled={page as number + 1 === data.totalPages}
+                        onPress={() => setPage((p) => p + 1)}
+                      >
+                        <span>Próx.</span>
+                        <Pagination.NextIcon />
+                      </Pagination.Next>
+                    </Pagination.Item>
+                  </Pagination.Content>
+                </Pagination>
               </AnimatePresence>
             </motion.ul>
           )}

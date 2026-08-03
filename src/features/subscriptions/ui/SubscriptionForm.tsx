@@ -11,6 +11,9 @@ import InputComponent from '../../../components/InputComponent';
 import SelectComponent from '../../../components/SelectComponent';
 import CurrencyInput from '../../../components/CurrencyInput';
 import { useManageSubscription } from '../hooks/useManageSubscription';
+import { cycleOptions, ownershipOptions } from '../../../types/ui/options';
+import type { ZodString } from 'zod';
+import { useQueryClient } from '@tanstack/react-query';
 
 type FormFieldConfig = {
   name: keyof SubscriptionPost;
@@ -21,6 +24,11 @@ type FormFieldConfig = {
   min?: number;
   max?: number;
   gridCols: number;
+  options?: {
+    id: number;
+    label: string;
+    value: string;
+  }[];
 };
 
 type SubscriptionFormProps = Pick<ModalInfo, 'handleCloseModal'> & {
@@ -28,17 +36,12 @@ type SubscriptionFormProps = Pick<ModalInfo, 'handleCloseModal'> & {
   activeItem: SubscriptionPut | null;
 };
 
-const cycleOptions = [
-  { id: 1, label: 'Mensal', value: 'MONTHLY' },
-  { id: 2, label: 'Anual', value: 'YEARLY' },
-];
-
 const defaultSubscription: SubscriptionPost = {
   name: '',
   price: 0.0,
   cycle: 'MONTHLY',
   dueDate: 1,
-  status: 'ACTIVE',
+  ownershipType: 'PERSONAL',
 };
 
 const formFields: FormFieldConfig[] = [
@@ -57,19 +60,27 @@ const formFields: FormFieldConfig[] = [
     gridCols: 2,
   },
   {
-    name: 'dueDate',
-    label: 'Dia de Vencimento',
-    placeholder: 'Ex: 15',
-    type: 'number',
-    min: 1,
-    max: 31,
+    name: 'ownershipType',
+    label: 'Responsável',
+    type: 'select',
+    options: ownershipOptions,
     gridCols: 1,
   },
   {
     name: 'cycle',
     label: 'Tipo de Ciclo',
     type: 'select',
+    options: cycleOptions,
     gridCols: 1,
+  },
+  {
+    name: 'dueDate',
+    label: 'Dia de Vencimento',
+    placeholder: 'Ex: 15',
+    type: 'number',
+    min: 1,
+    max: 31,
+    gridCols: 2,
   },
 ];
 
@@ -77,6 +88,7 @@ const SubscriptionForm = ({
   handleCloseModal,
   activeItem,
 }: SubscriptionFormProps) => {
+  const queryClient = useQueryClient();
   const formOpts = formOptions({
     defaultValues: activeItem ? activeItem : defaultSubscription,
   });
@@ -84,6 +96,8 @@ const SubscriptionForm = ({
   const onSuccess = () => {
     handleCloseModal();
     form.reset();
+    queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+    queryClient.invalidateQueries({ queryKey: ['summary'] });
   };
 
   const { create, update } = useManageSubscription({
@@ -93,7 +107,9 @@ const SubscriptionForm = ({
   const form = useForm({
     ...formOpts,
     onSubmit: async ({ value }) =>
-      activeItem ? update({ ...value, id: activeItem.id }) : create(value),
+      activeItem
+        ? update({ ...value, id: activeItem.id } as SubscriptionPut)
+        : create(value as SubscriptionPost),
   });
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -107,13 +123,13 @@ const SubscriptionForm = ({
         key={f.name}
         name={f.name}
         validators={{
-          onBlur: SubscriptionSchema.shape[f.name],
-          onChange: SubscriptionSchema.shape[f.name],
+          onBlur: SubscriptionSchema.shape[f.name] as ZodString,
+          onChange: SubscriptionSchema.shape[f.name] as ZodString,
         }}
         children={(field) => (
           <div className="grid gap-1">
             <SelectComponent
-              options={cycleOptions}
+              options={f.options || []}
               labelKey="label"
               valueKey="value"
               label={f.label}
@@ -136,8 +152,8 @@ const SubscriptionForm = ({
         <form.Field
           name={f.name}
           validators={{
-            onBlur: SubscriptionSchema.shape[f.name],
-            onChange: SubscriptionSchema.shape[f.name],
+            onBlur: SubscriptionSchema.shape[f.name] as ZodString,
+            onChange: SubscriptionSchema.shape[f.name] as ZodString,
           }}
           children={(field) => {
             const showError =
@@ -178,8 +194,8 @@ const SubscriptionForm = ({
         <form.Field
           name={f.name}
           validators={{
-            onBlur: SubscriptionSchema.shape[f.name],
-            onChange: SubscriptionSchema.shape[f.name],
+            onBlur: SubscriptionSchema.shape[f.name] as ZodString,
+            onChange: SubscriptionSchema.shape[f.name] as ZodString,
           }}
           children={(field) => {
             const showError =

@@ -1,15 +1,13 @@
 import { CircleAlert, Pencil, Trash } from 'lucide-react';
 import { normalizeLabelAndValue } from '../../../utils/normalizeLabelAndValue';
 import { formatCurrency } from '../../../utils/formatCurrency';
-import type {
-  Subscription,
-  SubscriptionPut,
-} from '../domain/subscription';
+import type { Subscription, SubscriptionPut } from '../domain/subscription';
 import type { ModalInfo } from '../../../types/ui/modal';
 import { Button, Card, CardHeader, Switch, toast } from '@heroui/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { subscriptionService } from '../api/subscription-service';
 import { motion } from 'motion/react';
+import React from 'react';
 
 type SubscriptionProps = Subscription &
   Pick<ModalInfo, 'setIsModalOpen'> & {
@@ -34,11 +32,15 @@ const SubscriptionComponent = ({
   price,
   cycle,
   status,
+  ownershipType,
   setIsModalOpen,
   setActiveItem,
   index,
 }: SubscriptionProps) => {
+  const [imgError, setImgError] = React.useState(false);
+
   const queryClient = useQueryClient();
+
   const deleteMutation = useMutation({
     mutationFn: subscriptionService.deleteSubscription,
     onSuccess: () => {
@@ -47,8 +49,8 @@ const SubscriptionComponent = ({
     },
   });
 
-  const patchStatusMutation = useMutation({
-    mutationFn: subscriptionService.patchSubscriptionStatus,
+  const toggleStatusMutation = useMutation({
+    mutationFn: subscriptionService.toggleSubscriptionStatus,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
       queryClient.invalidateQueries({ queryKey: ['summary'] });
@@ -72,13 +74,22 @@ const SubscriptionComponent = ({
     >
       <Card
         className={`group flex flex-row gap-3 items-center justify-between bg-neutral-900 border border-neutral-800 hover:border-blue-700 hover:shadow-sm hover:shadow-blue-600 transition transition-discrete duration-500 ${
-          status !== 'ACTIVE' ? 'grayscale-75 brightness-70' : ''
+          !status ? 'grayscale-75 brightness-70' : ''
         }`}
       >
         <div className="flex gap-4 items-start">
-          <div className="size-14 p-4 flex items-center justify-center rounded-2xl text-lg font-semibold bg-neutral-800 max-sm:size-12 max-sm:text-sm max-[444px]:hidden">
-            {name?.charAt(0).toUpperCase() || 'A'}
-          </div>
+          {!imgError ? (
+            <img
+              src={`https://img.logo.dev/${name.split(' ')[0].toLowerCase()}.com?token=pk_HgRAlXT2TAy-bhxPFq2M1g&format=webp&retina=true`}
+              alt={`Logo ${name}`}
+              onError={() => setImgError(true)}
+              className="rounded-2xl p-2 size-14 border border-zinc-800 max-sm:size-12 max-sm:text-sm max-[444px]:hidden"
+            />
+          ) : (
+            <div className="size-14 flex items-center justify-center rounded-2xl text-lg font-semibold bg-neutral-800 max-sm:size-12 max-sm:text-sm max-[444px]:hidden">
+              {name?.charAt(0).toUpperCase()}
+            </div>
+          )}
           <CardHeader className="grid">
             <Card.Title className="font-medium max-sm:text-sm">
               {normalizeLabelAndValue(name)}
@@ -88,12 +99,12 @@ const SubscriptionComponent = ({
             </Card.Description>
             <span
               className={`mt-2 py-1 px-2.5 w-fit rounded-3xl font-medium text-xs transition transition-discrete duration-500 ${
-                status !== 'ACTIVE'
+                !status
                   ? 'bg-orange-950 text-orange-400'
                   : 'bg-emerald-950 text-emerald-400'
               }`}
             >
-              {status === 'ACTIVE' ? 'Ativo' : 'Cancelado'}
+              {status ? 'Ativo' : 'Cancelado'}
             </span>
           </CardHeader>
         </div>
@@ -117,6 +128,7 @@ const SubscriptionComponent = ({
                   name: normalizeLabelAndValue(name),
                   price,
                   cycle,
+                  ownershipType,
                   dueDate,
                   status,
                 })
@@ -130,14 +142,15 @@ const SubscriptionComponent = ({
           </div>
 
           <Switch
-            isSelected={status === 'ACTIVE'}
-            onChange={() => {
-              patchStatusMutation.mutate({ id });
-            }}
+            isSelected={status}
             aria-label="Alternar status da assinatura"
             className="group flex h-5 cursor-pointer p-1"
           >
-            <Switch.Control>
+            <Switch.Control
+              onClick={() => {
+                toggleStatusMutation.mutate(id);
+              }}
+            >
               <Switch.Thumb className="pointer-events-none inline-block rounded-full bg-white shadow-lg ring-0" />
             </Switch.Control>
           </Switch>

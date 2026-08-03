@@ -30,7 +30,7 @@ export const useManageSubscription = ({
   });
 
   const updateMutation = useMutation({
-    mutationFn: subscriptionService.putSubscription,
+    mutationFn: subscriptionService.patchSubscription,
     mutationKey: ['subscriptions'],
     onSuccess: () => {
       queryClient.invalidateQueries({
